@@ -1,6 +1,6 @@
 
 import os
-
+import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -9,7 +9,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from agent import run_research
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 limiter = Limiter(key_func=get_remote_address)
@@ -64,8 +65,8 @@ def research(request: Request, payload: ResearchRequest):
             "result": result,
         }
     except Exception:
-        # Avoid exposing API keys or internal errors.
-        raise HTTPException(
-            status_code=502,
-            detail="Research failed. Please try again later.",
-        )
+    logger.exception("Research pipeline failed")
+    raise HTTPException(
+        status_code=502,
+        detail="Research failed. Please try again later."
+    )
